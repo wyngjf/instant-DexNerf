@@ -16,3 +16,5 @@ __pycache__
 imgui.ini
 /.idea
 .editorconfig
+/cmake-build-debug
+data

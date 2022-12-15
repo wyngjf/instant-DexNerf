@@ -1795,6 +1795,17 @@ void Testbed::set_camera_from_time(float t) {
 	set_camera_from_keyframe(m_camera_path.eval_camera_path(t));
 }
 
+// get camera ngp pose
+CameraKeyframe Testbed::get_camera_from_time(float t)
+{
+    return m_camera_path.eval_camera_path(t);
+}
+
+void Testbed::set_ngp_camera_matrix(const Eigen::Matrix<float, 3, 4>& cam)
+{
+    m_camera = cam;
+}
+
 void Testbed::update_loss_graph() {
 	m_loss_graph[m_loss_graph_samples++ % m_loss_graph.size()] = std::log(m_loss_scalar.val());
 }
@@ -2482,19 +2493,35 @@ void Testbed::render_frame(const Matrix<float, 3, 4>& camera_matrix0, const Matr
 		if (m_render_ground_truth) {
 			float alpha=1.f;
 			auto const &metadata = m_nerf.training.dataset.metadata[m_nerf.training.view];
-			render_buffer.overlay_image(
-				alpha,
-				Array3f::Constant(m_exposure) + m_nerf.training.cam_exposure[m_nerf.training.view].variable(),
-				m_background_color,
-				to_srgb ? EColorSpace::SRGB : EColorSpace::Linear,
-				metadata.pixels,
-				metadata.image_data_type,
-				metadata.resolution,
-				m_fov_axis,
-				m_zoom,
-				Vector2f::Constant(0.5f),
-				m_inference_stream
-			);
+            if (m_render_mode == ERenderMode::Shade) {
+                render_buffer.overlay_image(
+                        alpha,
+                        Array3f::Constant(m_exposure) + m_nerf.training.cam_exposure[m_nerf.training.view].variable(),
+                        m_background_color,
+                        to_srgb ? EColorSpace::SRGB : EColorSpace::Linear,
+                        metadata.pixels,
+                        metadata.image_data_type,
+                        metadata.resolution,
+                        m_fov_axis,
+                        m_zoom,
+                        Vector2f::Constant(0.5f),
+                        m_inference_stream
+                );
+            } else if (m_render_mode == ERenderMode::Depth && metadata.depth) {
+                render_buffer.overlay_image(
+                        alpha,
+                        Array3f::Constant(m_exposure) + m_nerf.training.cam_exposure[m_nerf.training.view].variable(),
+                        m_background_color,
+                        to_srgb ? EColorSpace::SRGB : EColorSpace::Linear,
+                        metadata.pixels,
+                        metadata.image_data_type,
+                        metadata.resolution,
+                        m_fov_axis,
+                        m_zoom,
+                        Vector2f::Constant(0.5f),
+                        m_inference_stream
+                );
+            }
 		}
 
 		// Visualize the accumulated error map if requested

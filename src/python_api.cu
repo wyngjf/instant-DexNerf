@@ -397,6 +397,8 @@ PYBIND11_MODULE(pyngp, m) {
 			"`thresh` is the density threshold; use 0 for SDF; 2.5 works well for NeRF. "
 			"If the aabb parameter specifies an inside-out (\"empty\") box (default), the current render_aabb bounding box is used."
 		)
+        .def("get_camera_from_time", &Testbed::get_camera_from_time, "get cam ngp path from time t in [0,1]", py::arg("t"))
+        .def("set_ngp_camera_matrix", &Testbed::set_ngp_camera_matrix, "set cam ngp path from time t in [0,1]", py::arg("k"))
 		;
 
 	// Interesting members.
@@ -453,6 +455,17 @@ PYBIND11_MODULE(pyngp, m) {
 		.def_readwrite("color_space", &Testbed::m_color_space)
 		.def_readwrite("tonemap_curve", &Testbed::m_tonemap_curve)
 		;
+
+    // export camerakeyframe interface
+    py::class_<CameraKeyframe> camera_keyframe(m, "CameraKeyframe");
+    camera_keyframe
+        .def_readwrite("R", &CameraKeyframe::R)
+        .def_readwrite("T", &CameraKeyframe::T)
+        .def_readwrite("fov", &CameraKeyframe::fov)
+        .def_readwrite("scale", &CameraKeyframe::scale)
+        .def_readwrite("slice", &CameraKeyframe::slice)
+        .def_readwrite("dof", &CameraKeyframe::dof)
+        ;
 
 	py::class_<CameraDistortion> camera_distortion(m, "CameraDistortion");
 	camera_distortion
